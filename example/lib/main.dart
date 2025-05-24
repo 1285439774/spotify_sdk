@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -527,7 +528,7 @@ class HomeState extends State<Home> {
       });
       var result = await SpotifySdk.connectToSpotifyRemote(
           clientId: dotenv.env['CLIENT_ID'].toString(),
-          redirectUrl: dotenv.env['REDIRECT_URL'].toString());
+          redirectUrl: dotenv.env[Platform.isAndroid ? 'SPOTIFY_REDIRECT_URI_ANDROID':'SPOTIFY_REDIRECT_URI_IOS'].toString());
       setStatus(result
           ? 'connect to spotify successful'
           : 'connect to spotify failed');
