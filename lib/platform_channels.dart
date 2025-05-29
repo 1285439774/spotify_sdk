@@ -26,6 +26,7 @@ class MethodChannels {
 class MethodNames {
   /// method name for [connectToSpotify]
   static const String connectToSpotify = 'connectToSpotify';
+  static const String connectToSpotify2 = 'connectToSpotify2';
 
   /// method name for [getAccessToken]
   static const String getAccessToken = 'getAccessToken';

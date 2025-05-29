@@ -4,6 +4,7 @@ public class SpotifySdkConstants
 {
     //connecting
     public static let methodConnectToSpotify = "connectToSpotify"
+    public static let methodConnectToSpotify2 = "connectToSpotify2"
     public static let methodGetAccessToken = "getAccessToken"
     public static let methodDisconnectFromSpotify = "disconnectFromSpotify"
 

@@ -30,6 +30,11 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> {
+
+  final redirectUriIos = dotenv.env['SPOTIFY_REDIRECT_URI_IOS'];
+  final redirectUriAndroid = dotenv.env['SPOTIFY_REDIRECT_URI_ANDROID'];
+  final customUriSchemeIos = dotenv.env['SPOTIFY_CUSTOM_URI_SCHEME_IOS'];
+  final customUriSchemeAndroid = dotenv.env['SPOTIFY_CUSTOM_URI_SCHEME_ANDROID'];
   bool _loading = false;
   bool _connected = false;
   final Logger _logger = Logger(
@@ -526,9 +531,15 @@ class HomeState extends State<Home> {
       setState(() {
         _loading = true;
       });
+      var redirectUri = (Platform.isAndroid ? redirectUriAndroid : redirectUriIos) ??
+          (throw Exception('SPOTIFY_REDIRECT_URI is not set in .env'));
+      var clientId = dotenv.env['CLIENT_ID'].toString();
+      print("redirectUriIos:$redirectUri,clientId:$clientId" );
+
       var result = await SpotifySdk.connectToSpotifyRemote(
           clientId: dotenv.env['CLIENT_ID'].toString(),
-          redirectUrl: dotenv.env[Platform.isAndroid ? 'SPOTIFY_REDIRECT_URI_ANDROID':'SPOTIFY_REDIRECT_URI_IOS'].toString());
+          redirectUrl: redirectUri!,
+      );
       setStatus(result
           ? 'connect to spotify successful'
           : 'connect to spotify failed');
@@ -550,9 +561,11 @@ class HomeState extends State<Home> {
 
   Future<String> getAccessToken() async {
     try {
+      var redirectUri = (Platform.isAndroid ? redirectUriAndroid : redirectUriIos) ??
+          (throw Exception('SPOTIFY_REDIRECT_URI is not set in .env'));
       var authenticationToken = await SpotifySdk.getAccessToken(
           clientId: dotenv.env['CLIENT_ID'].toString(),
-          redirectUrl: dotenv.env['REDIRECT_URL'].toString(),
+          redirectUrl: redirectUri.toString(),
           scope: 'app-remote-control, '
               'user-modify-playback-state, '
               'playlist-read-private, '
