@@ -3,7 +3,11 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
+import 'package:spotify_sdk/enums/content_type_enum.dart';
+import 'package:spotify_sdk/extensions/content_type_extension.dart';
+import 'package:spotify_sdk/models/list_items.dart';
 
+import 'enums/content_type_enum.dart';
 import 'enums/image_dimension_enum.dart';
 import 'enums/podcast_playback_speed.dart';
 import 'enums/repeat_mode_enum.dart';
@@ -14,6 +18,7 @@ import 'models/connection_status.dart';
 import 'models/crossfade_state.dart';
 import 'models/image_uri.dart';
 import 'models/library_state.dart';
+import 'models/list_item.dart';
 import 'models/player_context.dart';
 import 'models/player_state.dart';
 import 'models/user_status.dart';
@@ -448,6 +453,11 @@ class SpotifySdk {
     }
   }
 
+  static Future test()async{
+    var test = await _channel.invokeMethod(MethodNames.test);
+    return test;
+  }
+
   /// Toggles shuffle
   ///
   /// Throws a [PlatformException] if toggling shuffle failed
@@ -613,6 +623,20 @@ class SpotifySdk {
     }
   }
 
+  static Future<Uint8List?> getImage2(
+      {required String raw,
+        ImageDimension dimension = ImageDimension.medium}) async {
+    try {
+      return _channel.invokeMethod(MethodNames.getImage, {
+        ParamNames.imageUri: raw,
+        ParamNames.imageDimension: dimension.value
+      });
+    } on Exception catch (e) {
+      _logException(MethodNames.getImage, e);
+      rethrow;
+    }
+  }
+
   /// Sets the shuffle mode
   ///
   /// Set [shuffle] to true or false.
@@ -645,6 +669,64 @@ class SpotifySdk {
       rethrow;
     }
   }
+
+  /// 获取推荐内容 可指定分类
+  /// see[ContentType]
+  static Future<ListItems?> getRecommendedContentItems({ContentType contentType = ContentType.defaultValue, int? limit = 20})async{
+    try{
+      var recommendedContentItemsJson =await _channel.invokeMethod<String>(
+          MethodNames.getRecommendedContentItems,
+          {ParamNames.contentType: contentType.value, ParamNames.limit: limit});
+      _logger.d("recommendedContentItemsJson:$recommendedContentItemsJson");
+      if(recommendedContentItemsJson!.isNotEmpty){
+        var recommendedContentItemsMap = jsonDecode(recommendedContentItemsJson) as Map<String, dynamic>;
+        return ListItems.fromJson(recommendedContentItemsMap);
+      }
+      return null;
+    }on Exception catch(e){
+      _logException(MethodNames.getRecommendedContentItems, e);
+      rethrow;
+    }
+  }
+
+  ///获取listItem子项
+  ///ListItem从ListItems.items中获取
+  ///perpage 要获取的子项数量
+  ///offset 从哪个位置开始
+  ///see[ListItem] see[ListItems]
+  static Future<ListItems?> getChildrenOfItem({required ListItem contentItem,  int? perpage = 20, int? offset = 0})async{
+    _logger.d("item:${contentItem.toJson()}");
+    try{
+      var contentItemJson = contentItem.toJson();
+      var childrenOfItemJson = await _channel.invokeMethod<String>(
+          MethodNames.getChildrenOfItem,
+          {ParamNames.contentItem: jsonEncode(contentItemJson), ParamNames.perpage: perpage, ParamNames.offset: offset});
+      if(childrenOfItemJson!.isNotEmpty){
+        var childrenOfItemMap = jsonDecode(childrenOfItemJson) as Map<String, dynamic>;
+        return ListItems.fromJson(childrenOfItemMap);
+      }
+      return null;
+    }on Exception catch(e){
+      _logException(MethodNames.getChildrenOfItem, e);
+      rethrow;
+    }
+  }
+
+  ///播放listItem
+  static Future playContentItem({required ListItem contentItem})async{
+    try{
+      var contentItemJson = contentItem.toJson();
+
+      return await _channel.invokeMethod<bool>(
+          MethodNames.playContentItem,
+          {ParamNames.contentItem: jsonEncode(contentItemJson)}
+      );
+    }on Exception catch(e){
+      _logException(MethodNames.playContentItem, e);
+      rethrow;
+    }
+  }
+
 
   static void _logException(String method, Exception e) {
     if (e is PlatformException) {

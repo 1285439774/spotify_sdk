@@ -14,6 +14,7 @@ class EventChannels {
 
   /// event channel name for [connectionStatus]
   static const String connectionStatus = 'connection_status_subscription';
+
 }
 
 /// Holds the names for all the method channels that are used in the package
@@ -108,6 +109,12 @@ class MethodNames {
 
   /// method name for [switchToLocalDevice]
   static const String switchToLocalDevice = "switchToLocalDevice";
+
+  static const String test = "test";
+
+  static const String getRecommendedContentItems = "getRecommendedContentItems";
+  static const String getChildrenOfItem = "getChildrenOfItem";
+  static const String playContentItem = "playContentItem";
 }
 
 /// Holds the names for all parameters that are used in the package
@@ -159,4 +166,11 @@ class ParamNames {
 
   /// param name for [trackIndex]
   static const String trackIndex = 'trackIndex';
+
+  static const String contentType = 'contentType';
+  static const String limit = 'limit';
+  static const String contentItem = 'contentItem';
+  static const String perpage = 'perpage';
+  static const String offset = 'offset';
+
 }

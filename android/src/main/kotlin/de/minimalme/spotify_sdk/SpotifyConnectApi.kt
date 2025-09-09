@@ -6,6 +6,7 @@ import com.spotify.protocol.types.ImageUri
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
 import android.graphics.Bitmap
+import android.util.Log
 
 class SpotifyConnectApi(spotifyAppRemote: SpotifyAppRemote?, result: MethodChannel.Result) : BaseSpotifyApi(spotifyAppRemote, result) {
 
@@ -21,5 +22,9 @@ class SpotifyConnectApi(spotifyAppRemote: SpotifyAppRemote?, result: MethodChann
         } else {
             spotifyRemoteAppNotSetError()
         }
+    }
+    fun test(){
+        Log.d("test", "test");
+        result.success("test")
     }
 }

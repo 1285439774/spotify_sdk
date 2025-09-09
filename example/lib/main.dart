@@ -8,9 +8,13 @@ import 'package:logger/logger.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:spotify_sdk/models/crossfade_state.dart';
 import 'package:spotify_sdk/models/image_uri.dart';
+import 'package:spotify_sdk/models/list_items.dart';
 import 'package:spotify_sdk/models/player_context.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:spotify_sdk/enums/content_type_enum.dart';
+import 'package:spotify_sdk_example/queue_content_page.dart';
+import 'package:spotify_sdk_example/recommended_content_page.dart';
 
 import 'widgets/sized_icon_button.dart';
 
@@ -190,6 +194,21 @@ class HomeState extends State<Home> {
                 ElevatedButton(
                   onPressed: switchToLocalDevice,
                   child: const Text('switch to local device'),
+                ),
+              ],
+            ),
+            const Divider(),
+            Text(
+              'Content Api',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  onPressed: () => getRecommendedContentItems(context2),
+                  child: const Text('get recommended content items'),
                 ),
               ],
             ),
@@ -534,11 +553,12 @@ class HomeState extends State<Home> {
       var redirectUri = (Platform.isAndroid ? redirectUriAndroid : redirectUriIos) ??
           (throw Exception('SPOTIFY_REDIRECT_URI is not set in .env'));
       var clientId = dotenv.env['CLIENT_ID'].toString();
-      print("redirectUriIos:$redirectUri,clientId:$clientId" );
+      print("redirectUri:$redirectUri,clientId:$clientId" );
 
       var result = await SpotifySdk.connectToSpotifyRemote(
-          clientId: dotenv.env['CLIENT_ID'].toString(),
-          redirectUrl: redirectUri!,
+          clientId: clientId,
+          redirectUrl: redirectUri,
+        scope: "user-read-playback-state"
       );
       setStatus(result
           ? 'connect to spotify successful'
@@ -755,6 +775,27 @@ class HomeState extends State<Home> {
     try {
       await SpotifySdk.addToLibrary(
           spotifyUri: 'spotify:track:58kNJana4w5BIjlZE2wq5m');
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  Future<void> getRecommendedContentItems(BuildContext context2)async{
+    try {
+      var recommendedContentItems = await SpotifySdk.getRecommendedContentItems(contentType: ContentType.defaultValue,limit: 50);
+      if(context2.mounted) {
+        Navigator.push(
+          context2, // 这个context必须来自一个已经构建的widget树中的BuildContext
+          MaterialPageRoute(
+            builder: (context) =>
+                RecommendedContentItems(
+                  contentItems: recommendedContentItems!,
+                ),
+          ),
+        );
+      }
     } on PlatformException catch (e) {
       setStatus(e.code, message: e.message);
     } on MissingPluginException {

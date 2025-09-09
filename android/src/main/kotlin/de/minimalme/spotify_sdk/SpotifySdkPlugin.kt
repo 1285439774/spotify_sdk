@@ -4,10 +4,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.google.gson.Gson
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector.ConnectionListener
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.android.appremote.api.error.*
+import com.spotify.protocol.types.ListItem
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -55,6 +57,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
 
     // connectApi
     private val methodSwitchToLocalDevice = "switchToLocalDevice"
+    private val methodTest = "test"
 
     //playerApi
     private val methodGetCrossfadeState = "getCrossfadeState"
@@ -96,6 +99,16 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
     private val paramRepeatMode = "repeatMode"
     private val paramShuffle = "shuffle"
 
+    //contentApi
+    private val methodGetRecommendedContentItems = "getRecommendedContentItems"
+    private val methodGetChildrenOfItem = "getChildrenOfItem"
+    private val methodPlayContentItem = "playContentItem"
+    private val paramContentType = "contentType"
+    private val paramLimit = "limit"
+    private val paramContentItem = "contentItem"
+    private val paramPerpage = "perpage"
+    private val paramOffset = "offset"
+
     private val errorConnecting = "errorConnecting"
     private val errorDisconnecting = "errorDisconnecting"
     private val errorConnection = "errorConnection"
@@ -111,6 +124,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
     private var spotifyConnectApi: SpotifyConnectApi? = null
     private var spotifyUserApi: SpotifyUserApi? = null
     private var spotifyImagesApi: SpotifyImagesApi? = null
+    private var spotifyContentApi: SpotifyContentApi? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         this.applicationContext = binding.applicationContext
@@ -170,6 +184,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
             spotifyUserApi = SpotifyUserApi(spotifyAppRemote, result)
             spotifyImagesApi = SpotifyImagesApi(spotifyAppRemote, result)
             spotifyConnectApi = SpotifyConnectApi(spotifyAppRemote, result)
+            spotifyContentApi = SpotifyContentApi(spotifyAppRemote, result)
         }
 
         when (call.method) {
@@ -179,6 +194,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
             methodDisconnectFromSpotify -> disconnectFromSpotify(result)
             //connectApi calls
             methodSwitchToLocalDevice -> spotifyConnectApi?.switchToLocalDevice()
+            methodTest-> spotifyConnectApi?.test()
             //playerApi calls
             methodGetCrossfadeState -> spotifyPlayerApi?.getCrossfadeState()
             methodGetPlayerState -> spotifyPlayerApi?.getPlayerState()
@@ -203,6 +219,21 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
             methodGetLibraryState -> spotifyUserApi?.getLibraryState(call.argument(paramSpotifyUri))
             //imageApi calls
             methodGetImage -> spotifyImagesApi?.getImage(call.argument(paramImageUri), call.argument(paramImageDimension))
+            //contentApi calls
+            methodGetRecommendedContentItems -> spotifyContentApi?.getRecommendedContentItems(call.argument(paramContentType))
+            methodGetChildrenOfItem -> {
+                val contentItemJson = call.argument<String>(paramContentItem)
+                val listItem = Gson().fromJson<ListItem>(contentItemJson, ListItem::class.java)
+                val perPage = call.argument<Int>(paramPerpage) ?: 20
+                val offset = call.argument<Int>(paramOffset) ?: 0
+                spotifyContentApi?.getChildrenOfItem(listItem, perPage, offset)
+            }
+
+            methodPlayContentItem -> {
+                val contentItemJson = call.argument<String>(paramContentItem)
+                val listItem = Gson().fromJson<ListItem>(contentItemJson, ListItem::class.java)
+                spotifyContentApi?.playContentItem(listItem)
+            }
             // method call is not implemented yet
             else -> result.notImplemented()
         }
@@ -321,6 +352,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
             builder.setScopes(scopeArray)
             val request = builder.build()
 
+            Log.d(javaClass.simpleName,"**openLoginActivity**")
             AuthorizationClient.openLoginActivity(applicationActivity, requestCodeAuthentication, request)
         }
     }
