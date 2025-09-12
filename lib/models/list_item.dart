@@ -11,11 +11,13 @@ class ListItem {
   ListItem({
     required this.hasChildren,
     required this.id,
-    required this.imageId,
+    this.imageId,
     required this.playable,
     required this.subtitle,
     required this.title,
     required this.uri,
+     this.pinnned,
+     this.description,
   });
 
   @JsonKey(name: 'has_children')
@@ -25,7 +27,7 @@ class ListItem {
   final String id;
 
   @JsonKey(name: 'image_id')
-  final ImageId imageId;
+  final ImageId? imageId;
 
   @JsonKey(name: 'playable')
   final bool playable;
@@ -38,6 +40,13 @@ class ListItem {
 
   @JsonKey(name: 'uri')
   final String uri;
+
+  @JsonKey(name: 'is_pinned')
+  final bool? pinnned;
+
+  @JsonKey(name: 'description')
+  final String? description;
+
 
   factory ListItem.fromJson(Map<String, dynamic> json) =>
       _$ListItemFromJson(json);
