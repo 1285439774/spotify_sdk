@@ -705,7 +705,7 @@ class SpotifySdk {
       var recommendedContentItemsJson =await _channel.invokeMethod<String>(
           MethodNames.getRecommendedContentItems,
           {ParamNames.contentType: contentType.value, ParamNames.limit: limit});
-      _logger.d("recommendedContentItemsJson:$recommendedContentItemsJson");
+      // _logger.d("recommendedContentItemsJson:$recommendedContentItemsJson");
       if(recommendedContentItemsJson!.isNotEmpty){
         var recommendedContentItemsMap = jsonDecode(recommendedContentItemsJson) as Map<String, dynamic>;
         // _logger.d("recommendedContentItemsMap:$recommendedContentItemsMap");
@@ -725,7 +725,7 @@ class SpotifySdk {
   ///offset 从哪个位置开始
   ///see[ListItem] see[ListItems]
   static Future<ListItems?> getChildrenOfItem({required ListItem contentItem,  int? perpage = 20, int? offset = 0})async{
-    _logger.d("item:${contentItem.toJson()}");
+    // _logger.d("item:${contentItem.toJson()}");
     try{
       var contentItemJson = contentItem.toJson();
       var params = Platform.isAndroid ? {ParamNames.contentItem: jsonEncode(contentItemJson), ParamNames.perpage: perpage, ParamNames.offset: offset} :
