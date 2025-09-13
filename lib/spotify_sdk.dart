@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
@@ -94,6 +95,20 @@ class SpotifySdk {
         ParamNames.scope: scope,
         ParamNames.spotifyUri: spotifyUri,
         ParamNames.asRadio: asRadio,
+      });
+    } on Exception catch (e) {
+      _logException(MethodNames.connectToSpotify, e);
+      rethrow;
+    }
+  }
+
+  static Future<bool> connectToSpotifyRemote2({required String clientId,
+    required String redirectUrl,required String accessToken}) async {
+    try {
+      return await _channel.invokeMethod(MethodNames.connectToSpotify2,{
+        ParamNames.clientId: clientId,
+        ParamNames.redirectUrl: redirectUrl,
+        ParamNames.accessToken: accessToken,
       });
     } on Exception catch (e) {
       _logException(MethodNames.connectToSpotify, e);
@@ -637,6 +652,19 @@ class SpotifySdk {
     }
   }
 
+  static Future<Uint8List?> getImageForContentUri({
+    required String spotifyUri,ImageDimension dimension = ImageDimension.medium
+  })async{
+    try {
+      return _channel.invokeMethod(MethodNames.getImageForContentItem, {
+        ParamNames.spotifyUri: spotifyUri,
+        ParamNames.imageDimension: dimension.value
+      });
+    } on Exception catch (e) {
+      _logException(MethodNames.getImageForContentItem, e);
+      rethrow;
+    }
+  }
   /// Sets the shuffle mode
   ///
   /// Set [shuffle] to true or false.
@@ -680,6 +708,8 @@ class SpotifySdk {
       _logger.d("recommendedContentItemsJson:$recommendedContentItemsJson");
       if(recommendedContentItemsJson!.isNotEmpty){
         var recommendedContentItemsMap = jsonDecode(recommendedContentItemsJson) as Map<String, dynamic>;
+        // _logger.d("recommendedContentItemsMap:$recommendedContentItemsMap");
+
         return ListItems.fromJson(recommendedContentItemsMap);
       }
       return null;
@@ -698,9 +728,11 @@ class SpotifySdk {
     _logger.d("item:${contentItem.toJson()}");
     try{
       var contentItemJson = contentItem.toJson();
+      var params = Platform.isAndroid ? {ParamNames.contentItem: jsonEncode(contentItemJson), ParamNames.perpage: perpage, ParamNames.offset: offset} :
+          {ParamNames.spotifyUri:contentItem.uri};
       var childrenOfItemJson = await _channel.invokeMethod<String>(
           MethodNames.getChildrenOfItem,
-          {ParamNames.contentItem: jsonEncode(contentItemJson), ParamNames.perpage: perpage, ParamNames.offset: offset});
+          params);
       if(childrenOfItemJson!.isNotEmpty){
         var childrenOfItemMap = jsonDecode(childrenOfItemJson) as Map<String, dynamic>;
         return ListItems.fromJson(childrenOfItemMap);
@@ -716,10 +748,11 @@ class SpotifySdk {
   static Future playContentItem({required ListItem contentItem})async{
     try{
       var contentItemJson = contentItem.toJson();
-
+      var params = Platform.isAndroid ?{ParamNames.contentItem: jsonEncode(contentItemJson)}:
+          {ParamNames.spotifyUri:contentItem.uri};
       return await _channel.invokeMethod<bool>(
           MethodNames.playContentItem,
-          {ParamNames.contentItem: jsonEncode(contentItemJson)}
+          params
       );
     }on Exception catch(e){
       _logException(MethodNames.playContentItem, e);

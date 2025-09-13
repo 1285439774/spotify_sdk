@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -60,7 +61,7 @@ class QueueContentPage extends StatelessWidget {
           children: [
             // 图片部分
             Expanded(
-              child: spotifyImageWidget(item.imageId.raw),
+              child: spotifyImageWidget(item),
             ),
             // 文字部分
             Padding(
@@ -106,12 +107,15 @@ class QueueContentPage extends StatelessWidget {
     }
   }
 
-  Widget spotifyImageWidget(String imageRaw) {
+  Widget spotifyImageWidget(ListItem item) {
     return FutureBuilder(
-        future: SpotifySdk.getImage2(
-          raw: imageRaw,
+        future: Platform.isAndroid ?SpotifySdk.getImage2(
+          raw: item.imageId!.raw,
           dimension: ImageDimension.large,
-        ),
+        ) : SpotifySdk.getImageForContentUri(
+          spotifyUri: item.uri,
+          dimension: ImageDimension.large,
+        ) ,
         builder: (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
           if (snapshot.hasData) {
             return Image.memory(snapshot.data!);

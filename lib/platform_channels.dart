@@ -115,6 +115,7 @@ class MethodNames {
   static const String getRecommendedContentItems = "getRecommendedContentItems";
   static const String getChildrenOfItem = "getChildrenOfItem";
   static const String playContentItem = "playContentItem";
+  static const String getImageForContentItem = "getImageForSpotifyUri";
 }
 
 /// Holds the names for all parameters that are used in the package

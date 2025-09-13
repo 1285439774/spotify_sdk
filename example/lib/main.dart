@@ -33,7 +33,7 @@ class Home extends StatefulWidget {
   HomeState createState() => HomeState();
 }
 
-class HomeState extends State<Home> {
+class HomeState extends State<Home> with WidgetsBindingObserver{
 
   final redirectUriIos = dotenv.env['SPOTIFY_REDIRECT_URI_IOS'];
   final redirectUriAndroid = dotenv.env['SPOTIFY_REDIRECT_URI_ANDROID'];
@@ -55,6 +55,51 @@ class HomeState extends State<Home> {
   CrossfadeState? crossfadeState;
   late ImageUri? currentTrackImageUri;
 
+  String? accessToken = "BQAGzEu5Vu3KYyICfV_lPbhJ6FAX0WvAO2MBdgW2ShItWnfSoGqUQMfyzFJY3BxwwAZd-CROIj5qRxWCOiRkm1s5kvIRQFn6QKqyYkuC7Iiik08kwFqHLtK_llR8YD8iNnhz3RsmvOgvek4PcB0ICZ-CaPL2aAsp7i1q4cNhcFsK53fRNejvhCWZ7_I-WfC3HtFHM0ZhUzyi9zP5yswBg_S_RU3yQRAUtIoMd32qT8BPhToEDo5jyrU7BnRccOlukt9qNo_Ckg";
+  @override
+  void initState() {
+    super.initState();
+    // 注册监听器
+    // WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // 移除监听器
+    // WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed /*&& accessToken!=null*/) {
+      // 界面恢复活跃
+      print('界面已恢复活跃');
+      try {
+        // 重新连接
+        var redirectUri = (Platform.isAndroid ? redirectUriAndroid : redirectUriIos) ??
+            (throw Exception('SPOTIFY_REDIRECT_URI is not set in .env'));
+        bool result = await SpotifySdk.connectToSpotifyRemote(clientId: dotenv.env['CLIENT_ID'].toString(),
+            redirectUrl: redirectUri!,accessToken: accessToken!);
+        print("reconnect_result:$result");
+      } catch (e) {
+        print('重新连接失败: $e');
+      }
+
+    } else if (state == AppLifecycleState.inactive) {
+      // 应用处于非活跃状态（例如电话进来）
+      SpotifySdk.disconnect();
+      print('应用处于非活跃状态');
+    } else if (state == AppLifecycleState.paused) {
+      // 应用进入后台
+      print('应用进入后台');
+      SpotifySdk.disconnect();
+    } else if (state == AppLifecycleState.detached) {
+      // 应用即将被销毁
+      print('应用即将被销毁');
+      SpotifySdk.disconnect();
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -64,6 +109,7 @@ class HomeState extends State<Home> {
       home: StreamBuilder<ConnectionStatus>(
         stream: SpotifySdk.subscribeConnectionStatus(),
         builder: (context, snapshot) {
+          print("_connected:$_connected");
           _connected = false;
           var data = snapshot.data;
           if (data != null) {
@@ -497,6 +543,8 @@ class HomeState extends State<Home> {
   }
 
   Widget spotifyImageWidget(ImageUri image) {
+    print("ImageUri:${image.raw}");
+
     return FutureBuilder(
         future: SpotifySdk.getImage(
           imageUri: image,
@@ -591,6 +639,7 @@ class HomeState extends State<Home> {
               'playlist-read-private, '
               'playlist-modify-public,user-read-currently-playing');
       setStatus('Got a token: $authenticationToken');
+      accessToken = authenticationToken;
       return authenticationToken;
     } on PlatformException catch (e) {
       setStatus(e.code, message: e.message);

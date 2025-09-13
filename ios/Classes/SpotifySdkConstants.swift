@@ -29,6 +29,7 @@ public class SpotifySdkConstants
 
     //images api
     public static let methodGetImage = "getImage"
+    public static let methodGetImageForContentItem = "getImageForSpotifyUri"
 
     public static let paramClientId = "clientId"
     public static let paramRedirectUrl = "redirectUrl"
@@ -44,4 +45,14 @@ public class SpotifySdkConstants
     public static let paramTrackIndex = "trackIndex"
     public static let scope = "scope"
     public static let getLibraryState = "getLibraryState"
+
+    //content api
+    public static let methodGetRecommendedContentItem = "getRecommendedContentItems"
+    public static let methodGetChildrenOfItem = "getChildrenOfItem"
+    public static let methodPlayContentItem = "playContentItem"
+    public static let paramContentType = "contentType"
+    public static let paramLimit = "limit"
+    public static let paramContentItem = "contentItem"
+    public static let paramPerPage = "perpage"
+    public static let paramOffset = "offset"
 }

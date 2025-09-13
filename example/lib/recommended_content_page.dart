@@ -42,7 +42,7 @@ class RecommendedContentItems extends StatelessWidget{
   }
 
   void _onItemTap(BuildContext context,ListItem item)async {
-    if (item.hasChildren) {
+    // if (item.hasChildren) {
       var childrenItems = await SpotifySdk.getChildrenOfItem(contentItem: item, perpage: 50, offset: 0);
       if (childrenItems != null) {
         Navigator.push(
@@ -57,6 +57,6 @@ class RecommendedContentItems extends StatelessWidget{
           ),
         );
       }
-    }
+    // }
   }
 }
