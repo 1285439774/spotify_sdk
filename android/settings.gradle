@@ -1,2 +1,3 @@
-rootProject.name = 'spotify_sdk'
-include ':spotify-app-remote'
+//rootProject.name = 'spotify_sdk'
+//include ':spotify-app-remote'
+//作为模块导入不需要，运行example需要把注释去掉

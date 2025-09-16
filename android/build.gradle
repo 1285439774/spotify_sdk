@@ -65,9 +65,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // -- spotify
     implementation "com.spotify.android:auth:2.1.0"
-    implementation project(':spotify-app-remote')
+//    implementation project(':spotify-app-remote')
+    implementation files('libs/spotify-app-remote-release-0.8.0.aar')
     implementation 'com.google.code.gson:gson:2.10.1'
     // -- events
     implementation "com.github.stuhlmeier:kotlin-events:v2.0"
-//    compileOnly 'io.flutter:flutter_embedding:1.0.0'
 }
