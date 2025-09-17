@@ -10,7 +10,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath 'com.android.tools.build:gradle:8.6.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -66,7 +66,6 @@ dependencies {
     // -- spotify
     implementation "com.spotify.android:auth:2.1.0"
     implementation project(':spotify-app-remote')
-//    implementation 'com.spotify.android:spotify-app-remote-release:0.8.0'
 //    implementation files('libs/spotify-app-remote-release-0.8.0.aar')
     implementation 'com.google.code.gson:gson:2.10.1'
     // -- events
