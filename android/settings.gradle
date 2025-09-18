@@ -1,5 +1,5 @@
 rootProject.name = 'spotify_sdk'
 //include ':spotify-app-remote'
 //作为模块导入不需要，运行example需要把注释去掉
-include ':spotify-app-remote'
-project(':spotify-app-remote').projectDir = new File(rootProject.projectDir, 'android/spotify-app-remote')
+//include ':spotify-app-remote'
+//project(':spotify-app-remote').projectDir = new File(rootProject.projectDir, 'android/spotify-app-remote')
