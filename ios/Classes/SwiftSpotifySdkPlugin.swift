@@ -2,7 +2,7 @@ import Flutter
 import SpotifyiOS
 
 public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
-    private static var instance = SwiftSpotifySdkPlugin()
+    public static var instance = SwiftSpotifySdkPlugin()
     private var appRemote: SPTAppRemote?
     private var connectionStatusHandler: ConnectionStatusHandler?
     private var playerStateHandler: PlayerStateHandler?
