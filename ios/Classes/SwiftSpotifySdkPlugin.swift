@@ -411,7 +411,7 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
                     result(FlutterError(code: "Connection Error", message: "AppRemote is null", details: nil))
                     return
                 }
-                appRemote.contentAPI?.fetchRecommendedContentItems(forType: SPTAppRemoteContentTypeDefault, flattenContainers: true) { (items, error) in
+                appRemote.contentAPI?.fetchRecommendedContentItems(forType: SPTAppRemoteContentTypeDefault, flattenContainers: false) { (items, error) in
                     if let error = error {
                         result(FlutterError(code: "Content API Error", message: error.localizedDescription, details: nil))
                         return
