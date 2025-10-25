@@ -29,6 +29,8 @@ class ListItems {
   @JsonKey(name: 'items')
   final List<ListItem> items;
 
+  String? parent;
+
 
   factory ListItems.fromJson(Map<String, dynamic> json) =>
       _$ListItemsFromJson(json);

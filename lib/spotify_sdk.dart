@@ -777,9 +777,9 @@ class SpotifySdk {
 
         final type = data['type'];
         final payload = data['data'];
-        /*if (type == 'child_list') {
+        if (type == 'child_list') {
           _logger.i("📦 Item event: $data");
-        }*/
+        }
         if (type == 'root_list') {
           final Map<String, dynamic> listItemsMap =
           Map<String, dynamic>.from(payload as Map<Object?, Object?>);
@@ -807,7 +807,8 @@ class SpotifySdk {
           /*_logger.i("💡 📦 child list received.length: ${listItemsMap['items']?.length ?? 0}");
           _logger.i("💡 📦 child list received: $payload");*/
           //
-          return ListItems.fromJson(listItemsMap);
+
+          return ListItems.fromJson(listItemsMap)..parent =data["parent"];
         }
 
         return ListItems.empty();
