@@ -57,6 +57,9 @@ class SpotifySdk {
   static const EventChannel _connectionStatusChannel =
       EventChannel(EventChannels.connectionStatus);
 
+  static const EventChannel _rootContentItemsChannel =
+    EventChannel(EventChannels.rootContentItems);
+
   //logging
   static final Logger _logger = Logger(
     //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
@@ -756,6 +759,61 @@ class SpotifySdk {
       );
     }on Exception catch(e){
       _logException(MethodNames.playContentItem, e);
+      rethrow;
+    }
+  }
+
+  static Stream<ListItems> subscribeRootContentItems() {
+    try {
+      var stream = _rootContentItemsChannel.receiveBroadcastStream();
+
+      return stream.map((event) {
+        if (event == null) {
+          throw Exception("⚠️ Received null event from iOS");
+        }
+
+        final Map<String, dynamic> data =
+        Map<String, dynamic>.from(event as Map<Object?, Object?>);
+
+        final type = data['type'];
+        final payload = data['data'];
+        /*if (type == 'child_list') {
+          _logger.i("📦 Item event: $data");
+        }*/
+        if (type == 'root_list') {
+          final Map<String, dynamic> listItemsMap =
+          Map<String, dynamic>.from(payload as Map<Object?, Object?>);
+      // ✅ 对 items 列表也做 from() 转换，彻底清理泛型问题
+          final itemsRaw = listItemsMap['items'];
+          if (itemsRaw is List) {
+            listItemsMap['items'] = itemsRaw
+                .map((e) => Map<String, dynamic>.from(e as Map<Object?, Object?>))
+                .toList();
+          }
+         /* _logger.i("💡 📦 Root list received.length: ${listItemsMap['items']?.length ?? 0}");
+          _logger.i("💡 📦 Root list received: $listItemsMap");*/
+
+          return ListItems.fromJson(listItemsMap);
+        }else if(type == "child_list"){
+          final Map<String, dynamic> listItemsMap =
+          Map<String, dynamic>.from(payload as Map<Object?, Object?>);
+          // ✅ 对 items 列表也做 from() 转换，彻底清理泛型问题
+          final itemsRaw = listItemsMap['items'];
+          if (itemsRaw is List) {
+            listItemsMap['items'] = itemsRaw
+                .map((e) => Map<String, dynamic>.from(e as Map<Object?, Object?>))
+                .toList();
+          }
+          /*_logger.i("💡 📦 child list received.length: ${listItemsMap['items']?.length ?? 0}");
+          _logger.i("💡 📦 child list received: $payload");*/
+          //
+          return ListItems.fromJson(listItemsMap);
+        }
+
+        return ListItems.empty();
+      });
+    } on Exception catch (e) {
+      _logException(MethodNames.subscribeRootContentItems, e);
       rethrow;
     }
   }

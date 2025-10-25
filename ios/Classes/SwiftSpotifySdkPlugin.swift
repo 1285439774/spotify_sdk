@@ -1,5 +1,36 @@
 import Flutter
 import SpotifyiOS
+import Foundation
+import ObjectiveC.runtime
+
+// 在文件顶部或其他合适的位置添加
+
+struct ContentItem: Codable {
+    let title: String?
+    let subtitle: String?
+    let contentDescription: String?
+    let identifier: String
+    let URI: String
+    let availableOffline: Bool
+    let playable: Bool
+    let container: Bool
+    let pinned: Bool
+    let children: [ContentItem]?
+
+    enum CodingKeys: String, CodingKey {
+        case title
+        case subtitle
+        case contentDescription
+        case identifier
+        case URI
+        case availableOffline = "isAvailableOffline"
+        case playable = "isPlayable"
+        case container = "isContainer"
+        case pinned = "isPinned"
+        case children
+    }
+}
+
 
 public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
     public static var instance = SwiftSpotifySdkPlugin()
@@ -9,6 +40,8 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
     private var playerContextHandler: PlayerContextHandler?
     private static var playerStateChannel: FlutterEventChannel?
     private static var playerContextChannel: FlutterEventChannel?
+    private var contentStreamHandler: ContentStreamHandler?
+    private static var contentEventChannel : FlutterEventChannel?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         guard playerStateChannel == nil else {
@@ -23,6 +56,10 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
         registrar.addMethodCallDelegate(instance, channel: spotifySDKChannel)
         instance.connectionStatusHandler = ConnectionStatusHandler()
         connectionStatusChannel.setStreamHandler(instance.connectionStatusHandler)
+        
+        contentEventChannel = FlutterEventChannel(name: "root_content_items_subscription", binaryMessenger: registrar.messenger())
+        instance.contentStreamHandler = ContentStreamHandler()
+        SwiftSpotifySdkPlugin.contentEventChannel?.setStreamHandler(instance.contentStreamHandler)
         
     }
 
@@ -419,7 +456,6 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
                     
                     if let contentItems = items as? [SPTAppRemoteContentItem] {
                         // 将获取到的 contentItems 转换为字典格式
-                    
                         let contentItemDictionaries = contentItems.map { item in
                             print("title: \(item.title ?? "nil"), isContainer: \(item.isContainer)")
 
@@ -427,16 +463,16 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
                                 "id": item.identifier,
                                 "uri": item.uri,
 //                               "image_id": "",
-                                "title":item.title,
-                                "subtitle":item.subtitle,
+                                "title": item.title ?? "",
+                                "subtitle": item.subtitle ?? "",
                                 "playable":item.isPlayable,
                                 "has_children":item.isContainer,
                                 "is_pinned":item.isPinned,
 //                                "description":item.contentDescription
+                             
                             
-                        
-                            ]
-                        }
+                                ]
+                            }
                         if(!contentItemDictionaries.isEmpty){
                             let contentItemsDictionaries :[String: Any] = [
                                 "limit" : contentItemDictionaries.count,
@@ -446,6 +482,28 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
                             ]
                             result(contentItemsDictionaries.json)
                         }
+                        
+                        // ---- 同时开始通过 event stream 推送逐个子项 ----
+                        
+                        let serializedItems = contentItems.map { self.serializeItem($0) }
+                                let rootListPayload: [String: Any] = [
+                                    "limit": serializedItems.count,
+                                    "offset": 0,
+                                    "total": serializedItems.count,
+                                    "items": serializedItems
+                                ]
+
+                        print("📤 Sending root_list event to Flutter")
+                                // --- 1️⃣ 通过 Stream 推送 Root 层完整数据 ---
+                                self.contentStreamHandler?.send([
+                                    "type": "root_list",
+                                    "data": rootListPayload
+                                ])
+                        
+                        
+                        for item in contentItems where item.isContainer {
+                                    self.fetchChildrenRecursive(of: item)
+                                }
                     } else {
                         result(FlutterError(code: "Content API Error", message: "Failed to fetch content items", details: nil))
                     }
@@ -477,9 +535,11 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
                         result(FlutterError(code: "Content API Error", message: error.localizedDescription, details: nil))
                         return
                     }
-                    
+
                     if let contentItems = items as? [SPTAppRemoteContentItem] {
+            
                         let contentItemDictionaries = contentItems.map { item in
+                            
                             return [
                                 "id": item.identifier,
                                 "uri": item.uri,
@@ -506,6 +566,7 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
                     }
                 }
             })
+            
         case SpotifySdkConstants.methodPlayContentItem:
             guard let appRemote = appRemote else {
                     result(FlutterError(code: "Connection Error", message: "AppRemote is null", details: nil))
@@ -543,6 +604,50 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
         }
     }
 
+    private func fetchChildrenRecursive(of item: SPTAppRemoteContentItem) {
+        appRemote?.contentAPI?.fetchChildren(of: item) {[weak self] (children, error) in
+            guard let self = self else { return } // 先解包 self
+                guard let children = children as? [SPTAppRemoteContentItem], error == nil else { return }
+ 
+            // 1️⃣ 序列化所有子节点
+                let serializedChildren = children.map { self.serializeItem($0) }
+
+                // 2️⃣ 封装为列表结构（和 root 一致）
+                let childListPayload: [String: Any] = [
+                    "limit": serializedChildren.count,
+                    "offset": 0,
+                    "total": serializedChildren.count,
+                    "items": serializedChildren
+                ]
+
+                // 3️⃣ 发送一个完整的 "child_list" 事件
+                self.contentStreamHandler?.send([
+                    "type": "child_list",
+                    "parent": item.identifier,
+                    "data": childListPayload
+                ])
+            
+                for child in children where child.isContainer {
+                    self.fetchChildrenRecursive(of: child)
+                }
+        }
+    }
+
+    private func serializeItem(_ item: SPTAppRemoteContentItem) -> [String: Any] {
+        return [
+            "id": item.identifier,
+            "uri": item.uri,
+            "title": item.title ?? "",
+            "subtitle": item.subtitle ?? "",
+            "playable": item.isPlayable,
+            "has_children": item.isContainer,
+            "is_pinned": item.isPinned
+        ]
+    }
+    
+    
+
+    
     private func connectToSpotify(clientId: String, redirectURL: String, accessToken: String? = nil, spotifyUri: String = "", asRadio: Bool?, additionalScopes: String? = nil) throws {
         func configureAppRemote(clientID: String, redirectURL: String, accessToken: String? = nil) throws {
             guard let redirectURL = URL(string: redirectURL) else {
@@ -624,5 +729,27 @@ extension SwiftSpotifySdkPlugin {
         print("setAccessTokenFromURL:"+token);
         appRemote.connectionParameters.accessToken = token
         appRemote.connect()
+    }
+    
+    func debugPrintObjCProperties(_ object: AnyObject) {
+        let mirrorClass: AnyClass = type(of: object)
+        var count: UInt32 = 0
+        if let properties = class_copyPropertyList(mirrorClass, &count) {
+            print("----- \(mirrorClass) -----")
+            for i in 0..<Int(count) {
+                let property = properties[i]
+                if let name = NSString(utf8String: property_getName(property)) {
+                    if let value = object.value(forKey: name as String) {
+                        print("\(name): \(value)")
+                    } else {
+                        print("\(name): nil")
+                    }
+                }
+            }
+            print("----------------------------")
+            free(properties)
+        } else {
+            print("⚠️ No properties found for \(mirrorClass)")
+        }
     }
 }

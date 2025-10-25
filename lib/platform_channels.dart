@@ -15,6 +15,8 @@ class EventChannels {
   /// event channel name for [connectionStatus]
   static const String connectionStatus = 'connection_status_subscription';
 
+  static const String rootContentItems = 'root_content_items_subscription';
+
 }
 
 /// Holds the names for all the method channels that are used in the package
@@ -79,6 +81,9 @@ class MethodNames {
 
   /// method name for [subscribeConnectionStatus]
   static const String subscribeConnectionStatus = 'subscribeConnectionStatus';
+
+  /// method name for [subscribeRootContentItems]
+  static const String subscribeRootContentItems = 'subscribeRootContentItems';
 
   /// method name for [toggleRepeat]
   static const String toggleRepeat = 'toggleRepeat';

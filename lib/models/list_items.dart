@@ -34,4 +34,7 @@ class ListItems {
       _$ListItemsFromJson(json);
 
   Map<String, dynamic> toJson() => _$ListItemsToJson(this);
+
+  factory ListItems.empty() => ListItems(limit: 0, offset: 0, total: 0, items: []);
+
 }
