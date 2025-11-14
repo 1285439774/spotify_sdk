@@ -28,9 +28,9 @@ class SpotifyContentApi(spotifyAppRemote: SpotifyAppRemote?, result: MethodChann
         }
 
         contentApi.getRecommendedContentItems(contentType)?.setResultCallback { listItems ->
-            listItems.items.forEach {
+            /*listItems.items.forEach {
                 Log.d(javaClass.simpleName,"listItems.items${it.toString()}")}
-            Log.d(javaClass.simpleName,listItems.toString())
+            Log.d(javaClass.simpleName,listItems.toString())*/
             result.success(Gson().toJson(listItems))
         }?.setErrorCallback {
             result.error("getRecommendedContentItems",it.message,null)
@@ -49,9 +49,9 @@ class SpotifyContentApi(spotifyAppRemote: SpotifyAppRemote?, result: MethodChann
             return
         }
 
-        Log.d(javaClass.simpleName,"getChildrenOfItem.perpage：${perpage}.offset:$offset")
+//        Log.d(javaClass.simpleName,"getChildrenOfItem.perpage：${perpage}.offset:$offset")
         contentApi.getChildrenOfItem(item,perpage,offset)?.setResultCallback {
-            Log.d(javaClass.simpleName,"getChildrenOfItem：${it.toString()}")
+//            Log.d(javaClass.simpleName,"getChildrenOfItem：${it.toString()}")
             result.success(Gson().toJson(it))
         }?.setErrorCallback {
             result.error("getChildrenOfItem",it.message,null)

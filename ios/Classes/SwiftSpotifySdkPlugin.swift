@@ -34,7 +34,7 @@ struct ContentItem: Codable {
 
 public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin {
     public static var instance = SwiftSpotifySdkPlugin()
-    private var appRemote: SPTAppRemote?
+    public var appRemote: SPTAppRemote?
     private var connectionStatusHandler: ConnectionStatusHandler?
     private var playerStateHandler: PlayerStateHandler?
     private var playerContextHandler: PlayerContextHandler?
