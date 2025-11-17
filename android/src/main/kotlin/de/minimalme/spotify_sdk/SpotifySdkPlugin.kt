@@ -26,7 +26,7 @@ import io.flutter.plugin.common.PluginRegistry
 import kotlinx.event.SetEvent
 import kotlinx.event.event
 
-class SpotifySdkPlugin private constructor(): MethodCallHandler, FlutterPlugin, ActivityAware, PluginRegistry.ActivityResultListener {
+class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, PluginRegistry.ActivityResultListener {
 
     // application context
     private var applicationContext : Context? = null
@@ -120,23 +120,12 @@ class SpotifySdkPlugin private constructor(): MethodCallHandler, FlutterPlugin, 
 
     private var pendingOperation: PendingOperation? = null
     private var spotifyAppRemote: SpotifyAppRemote? = null
-    var spotifyPlayerApi: SpotifyPlayerApi? = null
+    private var spotifyPlayerApi: SpotifyPlayerApi? = null
     private var spotifyConnectApi: SpotifyConnectApi? = null
     private var spotifyUserApi: SpotifyUserApi? = null
     private var spotifyImagesApi: SpotifyImagesApi? = null
     private var spotifyContentApi: SpotifyContentApi? = null
 
-    companion object {
-        @SuppressLint("StaticFieldLeak")
-        @Volatile
-        private var instance: SpotifySdkPlugin? = null
-
-        fun getInstance(): SpotifySdkPlugin {
-            return instance ?: synchronized(this) {
-                instance ?: SpotifySdkPlugin().also { instance = it }
-            }
-        }
-    }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         this.applicationContext = binding.applicationContext
@@ -186,6 +175,7 @@ class SpotifySdkPlugin private constructor(): MethodCallHandler, FlutterPlugin, 
     }
 
     override fun onDetachedFromActivity() {
+        spotifyPlayerApi?.pause()
         applicationActivity = null
     }
 

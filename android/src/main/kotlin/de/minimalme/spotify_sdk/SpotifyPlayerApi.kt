@@ -73,7 +73,7 @@ class SpotifyPlayerApi(spotifyAppRemote: SpotifyAppRemote?, result: MethodChanne
         }
     }
 
-    fun pause() {
+    internal fun pause() {
         if (playerApi != null) {
             playerApi.pause()
                     .setResultCallback { result.success(true) }
