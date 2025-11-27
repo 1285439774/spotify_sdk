@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:spotify_sdk/models/list_item.dart';
 import 'package:spotify_sdk/models/list_items.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:spotify_sdk_example/queue_content_page.dart';
-
+import 'package:logger/logger.dart';
 /**
  *@date 2025/9/8
  *@author kuang
@@ -16,19 +18,36 @@ class RecommendedContentItems extends StatelessWidget{
     this.currentContentItem,
   });
 
+  final Logger _logger = Logger(
+    //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
+    printer: PrettyPrinter(
+      methodCount: 2, // number of method calls to be displayed
+      errorMethodCount: 8, // number of method calls if stacktrace is provided
+      lineLength: 120, // width of the output
+      colors: true, // Colorful log messages
+      printEmojis: true, // Print an emoji for each log message
+    ),
+  );
+
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+
     return  Scaffold(
       appBar: AppBar(title: Text('Recommended Content')),
       body: ListView.separated(
         itemCount: contentItems.items.length,
         itemBuilder: (context, index) {
           final item = contentItems.items[index];
-          return ListTile(
-            title: Text("${item.title}"),
-            onTap: () => _onItemTap(context, item),
+          // _logger.d("RecommendedContentItems.item:${item.toJson()}");
+
+          return Column(
+            children: [
+              ListTile(
+                title: Text("${item.title}"),
+                onTap: () => _onItemTap(context, item),
+              )
+            ],
           );
         },
         separatorBuilder: (context, index) => Divider(
@@ -40,6 +59,7 @@ class RecommendedContentItems extends StatelessWidget{
       ),
     );
   }
+
 
   void _onItemTap(BuildContext context,ListItem item)async {
     // if (item.hasChildren) {

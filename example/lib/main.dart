@@ -61,6 +61,16 @@ class HomeState extends State<Home> with WidgetsBindingObserver{
     super.initState();
     // 注册监听器
     // WidgetsBinding.instance.addObserver(this);
+    SpotifySdk.subscribeRootContentItems().listen((listitems){
+      _logger.d("contentItems.parent:${listitems.parent}");
+      if(listitems.items.isNotEmpty) {
+        for (var item in listitems.items) {
+          _logger.d("contentItems:${item.toJson()},item:${item}");
+        }
+      }else{
+        _logger.d("contentItems:null");
+      }
+    });
   }
 
   @override
@@ -606,7 +616,7 @@ class HomeState extends State<Home> with WidgetsBindingObserver{
       var result = await SpotifySdk.connectToSpotifyRemote(
           clientId: clientId,
           redirectUrl: redirectUri,
-        scope: "user-read-playback-state"
+        // scope: "user-read-playback-state"
       );
       setStatus(result
           ? 'connect to spotify successful'
