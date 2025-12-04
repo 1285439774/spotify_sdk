@@ -7,8 +7,11 @@ class ConnectionStatusHandler: StatusHandler, SPTAppRemoteDelegate {
     var connectionResult: FlutterResult?
     var silentConnectionResult: FlutterResult?
     
-    private let redirectUri = URL(string:"comspotifytestsdk://")!
-    private let clientIdentifier = "951082a22bed4dfa9f1c3680a7f498fe"
+//    private let redirectUri = URL(string:"comspotifytestsdk://")!
+//    private let clientIdentifier = "951082a22bed4dfa9f1c3680a7f498fe"
+    
+    private let redirectUri = URL(string:"headunitapp://")!
+    private let clientIdentifier = "c126864ee36d4a58bb97f3b7651e6727"
     
     static private let kAccessTokenKey = "access-token-key"
     
