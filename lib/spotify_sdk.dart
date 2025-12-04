@@ -105,16 +105,11 @@ class SpotifySdk {
     }
   }
 
-  static Future<bool> connectToSpotifyRemote2({required String clientId,
-    required String redirectUrl,required String accessToken}) async {
+  static Future<bool> silentConnectToSpotify() async {
     try {
-      return await _channel.invokeMethod(MethodNames.connectToSpotify2,{
-        ParamNames.clientId: clientId,
-        ParamNames.redirectUrl: redirectUrl,
-        ParamNames.accessToken: accessToken,
-      });
+      return await _channel.invokeMethod(MethodNames.silentConnectToSpotify);
     } on Exception catch (e) {
-      _logException(MethodNames.connectToSpotify, e);
+      _logException(MethodNames.silentConnectToSpotify, e);
       rethrow;
     }
   }
@@ -655,11 +650,14 @@ class SpotifySdk {
     }
   }
 
-  static Future<Uint8List?> getImageForContentUri({
+  static Future<Uint8List?> getImageForContentItem({
+    required String spotifyContentItemId,
     required String spotifyUri,ImageDimension dimension = ImageDimension.medium
   })async{
     try {
+      _logger.i("spotifyContentItemId:$spotifyContentItemId,spotifyUri:$spotifyUri");
       return _channel.invokeMethod(MethodNames.getImageForContentItem, {
+        ParamNames.contentItemId: spotifyContentItemId,
         ParamNames.spotifyUri: spotifyUri,
         ParamNames.imageDimension: dimension.value
       });
@@ -732,7 +730,7 @@ class SpotifySdk {
     try{
       var contentItemJson = contentItem.toJson();
       var params = Platform.isAndroid ? {ParamNames.contentItem: jsonEncode(contentItemJson), ParamNames.perpage: perpage, ParamNames.offset: offset} :
-          {ParamNames.spotifyUri:contentItem.uri};
+          {ParamNames.contentItemId:contentItem.id,ParamNames.spotifyUri:contentItem.uri};
       var childrenOfItemJson = await _channel.invokeMethod<String>(
           MethodNames.getChildrenOfItem,
           params);
@@ -752,7 +750,7 @@ class SpotifySdk {
     try{
       var contentItemJson = contentItem.toJson();
       var params = Platform.isAndroid ?{ParamNames.contentItem: jsonEncode(contentItemJson)}:
-          {ParamNames.spotifyUri:contentItem.uri};
+          {ParamNames.contentItemId:contentItem.id,ParamNames.spotifyUri:contentItem.uri};
       return await _channel.invokeMethod<bool>(
           MethodNames.playContentItem,
           params

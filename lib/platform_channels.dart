@@ -29,7 +29,7 @@ class MethodChannels {
 class MethodNames {
   /// method name for [connectToSpotify]
   static const String connectToSpotify = 'connectToSpotify';
-  static const String connectToSpotify2 = 'connectToSpotify2';
+  static const String silentConnectToSpotify = 'silentConnectToSpotify';
 
   /// method name for [getAccessToken]
   static const String getAccessToken = 'getAccessToken';
@@ -178,5 +178,6 @@ class ParamNames {
   static const String contentItem = 'contentItem';
   static const String perpage = 'perpage';
   static const String offset = 'offset';
+  static const String contentItemId = 'contentItemId';
 
 }

@@ -21,6 +21,11 @@ import 'widgets/sized_icon_button.dart';
 Future<void> main() async {
   await dotenv.load(fileName: '.env');
   runApp(const Home());
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  WidgetsBinding.instance.addObserver(AppLifecycleObserver());
+
 }
 
 /// A [StatefulWidget] which uses:
@@ -119,7 +124,7 @@ class HomeState extends State<Home> with WidgetsBindingObserver{
       home: StreamBuilder<ConnectionStatus>(
         stream: SpotifySdk.subscribeConnectionStatus(),
         builder: (context, snapshot) {
-          print("_connected:$_connected");
+
           _connected = false;
           var data = snapshot.data;
           if (data != null) {
@@ -618,6 +623,7 @@ class HomeState extends State<Home> with WidgetsBindingObserver{
           redirectUrl: redirectUri,
         // scope: "user-read-playback-state"
       );
+      _logger.i("connectToSpotifyRemote:$result");
       setStatus(result
           ? 'connect to spotify successful'
           : 'connect to spotify failed');
@@ -867,3 +873,29 @@ class HomeState extends State<Home> with WidgetsBindingObserver{
     _logger.i('$code$text');
   }
 }
+final _logger = Logger();
+class AppLifecycleObserver with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _logger.i('APP 回到前台');
+        SpotifySdk.silentConnectToSpotify();
+        break;
+      case AppLifecycleState.paused:
+        _logger.i('APP 进入后台');
+        SpotifySdk.disconnect();
+        break;
+      case AppLifecycleState.inactive:
+        _logger.i('APP 不可交互（切换动画中）');
+        break;
+      case AppLifecycleState.detached:
+        _logger.i('APP 已移除（很少使用）');
+        break;
+      case AppLifecycleState.hidden:
+        // TODO: Handle this case.
+        _logger.i('APP 已隐藏');
+    }
+  }
+}
+

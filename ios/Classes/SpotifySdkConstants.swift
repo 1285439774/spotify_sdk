@@ -4,7 +4,7 @@ public class SpotifySdkConstants
 {
     //connecting
     public static let methodConnectToSpotify = "connectToSpotify"
-    public static let methodConnectToSpotify2 = "connectToSpotify2"
+    public static let methodSilentConnecToSpotify = "silentConnectToSpotify"
     public static let methodGetAccessToken = "getAccessToken"
     public static let methodDisconnectFromSpotify = "disconnectFromSpotify"
 
@@ -55,4 +55,5 @@ public class SpotifySdkConstants
     public static let paramContentItem = "contentItem"
     public static let paramPerPage = "perpage"
     public static let paramOffset = "offset"
+    public static let paramContentItemId = "contentItemId"
 }
