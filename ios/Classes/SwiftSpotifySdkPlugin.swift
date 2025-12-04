@@ -68,7 +68,7 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
         
     }
     
-    var appRemote: SPTAppRemote? {
+    public var appRemote: SPTAppRemote? {
         get {
             return connectionStatusHandler?.appRemote
         }
