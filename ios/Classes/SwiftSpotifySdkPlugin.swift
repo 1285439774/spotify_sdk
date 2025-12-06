@@ -40,8 +40,8 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
     private var connectionStatusHandler: ConnectionStatusHandler?
     private var playerStateHandler: PlayerStateHandler?
     private var playerContextHandler: PlayerContextHandler?
-    private static var playerStateChannel: FlutterEventChannel?
-    private static var playerContextChannel: FlutterEventChannel?
+     static var playerStateChannel: FlutterEventChannel?
+     static var playerContextChannel: FlutterEventChannel?
     private var contentStreamHandler: ContentStreamHandler?
     private static var contentEventChannel : FlutterEventChannel?
     // 全局缓存（key: contentItem.identifier, value: contentItem）
@@ -61,6 +61,13 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
         registrar.addMethodCallDelegate(instance, channel: spotifySDKChannel)
         instance.connectionStatusHandler = ConnectionStatusHandler()
         connectionStatusChannel.setStreamHandler(instance.connectionStatusHandler)
+        
+        let playerDelegate = PlayerDelegate()
+        instance.playerStateHandler = PlayerStateHandler(appRemote: instance.appRemote!, playerDelegate: playerDelegate)
+        SwiftSpotifySdkPlugin.playerStateChannel?.setStreamHandler(instance.playerStateHandler)
+
+        instance.playerContextHandler = PlayerContextHandler(appRemote: instance.appRemote!, playerDelegate: playerDelegate)
+        SwiftSpotifySdkPlugin.playerContextChannel?.setStreamHandler(instance.playerContextHandler)
         
         contentEventChannel = FlutterEventChannel(name: "root_content_items_subscription", binaryMessenger: registrar.messenger())
         instance.contentStreamHandler = ContentStreamHandler()
@@ -101,12 +108,6 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
                 appRemote.delegate = connectionStatusHandler
                 appRemote.connect()
                 
-                let playerDelegate = PlayerDelegate()
-                playerStateHandler = PlayerStateHandler(appRemote: self.appRemote!, playerDelegate: playerDelegate)
-                SwiftSpotifySdkPlugin.playerStateChannel?.setStreamHandler(playerStateHandler)
-
-                playerContextHandler = PlayerContextHandler(appRemote: self.appRemote!, playerDelegate: playerDelegate)
-                SwiftSpotifySdkPlugin.playerContextChannel?.setStreamHandler(playerContextHandler)
             }catch SpotifyError.redirectURLInvalid {
                 result(FlutterError(code: "errorConnecting", message: "Redirect URL is not set or has invalid format", details: nil))
             }catch {
@@ -252,6 +253,14 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
         case SpotifySdkConstants.methodGetPlayerState:
             guard let appRemote = appRemote else {
                 result(FlutterError(code: "Connection Error", message: "AppRemote is null", details: nil))
+                return
+            }
+            guard appRemote.isConnected else {
+                result(FlutterError(
+                    code: "NotConnected",
+                    message: "Spotify AppRemote is not connected",
+                    details: nil
+                ))
                 return
             }
             
@@ -464,6 +473,7 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
                     result(FlutterError(code: "Connection Error", message: "AppRemote is null", details: nil))
                     return
                 }
+            print("Sending request: get_recommended_content_for_type")
                 appRemote.contentAPI?.fetchRecommendedContentItems(forType: SPTAppRemoteContentTypeDefault, flattenContainers: false) { (items, error) in
                     if let error = error {
                         result(FlutterError(code: "Content API Error", message: error.localizedDescription, details: nil))
@@ -557,7 +567,7 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
                         result(FlutterError(code: "Content API Error", message: error.localizedDescription, details: nil))
                         return
                     }
-
+                    
                     if let contentItems = items as? [SPTAppRemoteContentItem] {
             
                         let contentItemDictionaries = contentItems.map { item in
@@ -753,19 +763,20 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
 //            let configuration = SPTConfiguration(clientID: clientID, redirectURL: redirectURL)
 //            let appRemote = SPTAppRemote(configuration: configuration, logLevel: .none)
 //            appRemote.delegate = connectionStatusHandler
-//            appRemote.connectionParameters.accessToken = accessToken
-//            self.appRemote = appRemote
-//            
 //            let playerDelegate = PlayerDelegate()
 //            playerStateHandler = PlayerStateHandler(appRemote: appRemote, playerDelegate: playerDelegate)
 //            SwiftSpotifySdkPlugin.playerStateChannel?.setStreamHandler(playerStateHandler)
 //
 //            playerContextHandler = PlayerContextHandler(appRemote: appRemote, playerDelegate: playerDelegate)
 //            SwiftSpotifySdkPlugin.playerContextChannel?.setStreamHandler(playerContextHandler)
+//            
+//            appRemote.connectionParameters.accessToken = accessToken
+//            self.appRemote = appRemote
 //        }
 //
 //        try configureAppRemote(clientID: clientId, redirectURL: redirectURL, accessToken: accessToken)
-
+//       
+        
         var scopes: [String]?
         if let additionalScopes = additionalScopes {
             scopes = additionalScopes.components(separatedBy: ",")
@@ -780,12 +791,7 @@ public class SwiftSpotifySdkPlugin: NSObject, FlutterPlugin{
               self.connectionStatusHandler?.connectionResult?(FlutterError(code: "spotifyNotInstalled", message: "Spotify app is not installed", details: nil))
             }
           }
-            let playerDelegate = PlayerDelegate()
-            playerStateHandler = PlayerStateHandler(appRemote: self.appRemote!, playerDelegate: playerDelegate)
-            SwiftSpotifySdkPlugin.playerStateChannel?.setStreamHandler(playerStateHandler)
-
-            playerContextHandler = PlayerContextHandler(appRemote: self.appRemote!, playerDelegate: playerDelegate)
-            SwiftSpotifySdkPlugin.playerContextChannel?.setStreamHandler(playerContextHandler)
+            
         }
     }
 }

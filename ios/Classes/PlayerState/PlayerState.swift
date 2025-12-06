@@ -54,12 +54,17 @@ struct State {
     }
 
     static func playerContextDictionary(_ playerState: SPTAppRemotePlayerState) -> [String : Any] {
-        return [
-            "title" : playerState.contextTitle,
-            "subtitle" : playerState.contextTitle,
-            "type" : playerState.contextURI.absoluteString.components(separatedBy: ":")[1],
-            "uri" : playerState.contextURI.absoluteString
-        ]
+        let uri = playerState.contextURI.absoluteString
+            let parts = uri.components(separatedBy: ":")
+
+            let type = parts.count > 1 ? parts[1] : ""   // 安全保护
+
+            return [
+                "title": playerState.contextTitle,
+                "subtitle": playerState.contextTitle,
+                "type": type,
+                "uri": uri
+            ]
     }
 
     static func crossfadeStateDictionary(_ crossfadeState: SPTAppRemoteCrossfadeState) -> [String : Any] {
