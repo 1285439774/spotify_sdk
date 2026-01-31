@@ -15,6 +15,8 @@ class EventChannels {
   /// event channel name for [connectionStatus]
   static const String connectionStatus = 'connection_status_subscription';
 
+  static const String rootContentItems = 'root_content_items_subscription';
+
 }
 
 /// Holds the names for all the method channels that are used in the package
@@ -27,7 +29,7 @@ class MethodChannels {
 class MethodNames {
   /// method name for [connectToSpotify]
   static const String connectToSpotify = 'connectToSpotify';
-  static const String connectToSpotify2 = 'connectToSpotify2';
+  static const String silentConnectToSpotify = 'silentConnectToSpotify';
 
   /// method name for [getAccessToken]
   static const String getAccessToken = 'getAccessToken';
@@ -79,6 +81,9 @@ class MethodNames {
 
   /// method name for [subscribeConnectionStatus]
   static const String subscribeConnectionStatus = 'subscribeConnectionStatus';
+
+  /// method name for [subscribeRootContentItems]
+  static const String subscribeRootContentItems = 'subscribeRootContentItems';
 
   /// method name for [toggleRepeat]
   static const String toggleRepeat = 'toggleRepeat';
@@ -173,5 +178,6 @@ class ParamNames {
   static const String contentItem = 'contentItem';
   static const String perpage = 'perpage';
   static const String offset = 'offset';
+  static const String contentItemId = 'contentItemId';
 
 }

@@ -126,6 +126,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
     private var spotifyImagesApi: SpotifyImagesApi? = null
     private var spotifyContentApi: SpotifyContentApi? = null
 
+
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         this.applicationContext = binding.applicationContext
 
@@ -174,6 +175,7 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
     }
 
     override fun onDetachedFromActivity() {
+        spotifyPlayerApi?.pause()
         applicationActivity = null
     }
 
@@ -407,6 +409,9 @@ class SpotifySdkPlugin : MethodCallHandler, FlutterPlugin, ActivityAware, Plugin
             "Concurrent operations detected: " + pendingOperation?.method.toString() + ", " + this
         }
         pendingOperation = PendingOperation(this, result)
+    }
+    public fun getPlayerApi(): SpotifyPlayerApi? {
+        return spotifyPlayerApi
     }
 }
 

@@ -91,8 +91,11 @@ class QueueContentPage extends StatelessWidget {
     }
 
     if(item.hasChildren || !item.id.contains("track")) {
-      var childrenItems = await SpotifySdk.getChildrenOfItem(contentItem: item, perpage: 50,offset: 0);
+      var childrenItems = await SpotifySdk.getChildrenOfItem(
+          contentItem: item, perpage: 50,offset: 0);
       if (childrenItems != null) {
+        print("childrenItems.total:${childrenItems.total}");
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -112,7 +115,8 @@ class QueueContentPage extends StatelessWidget {
         future: Platform.isAndroid ?SpotifySdk.getImage2(
           raw: item.imageId!.raw,
           dimension: ImageDimension.large,
-        ) : SpotifySdk.getImageForContentUri(
+        ) : SpotifySdk.getImageForContentItem(
+          spotifyContentItemId: item.id,
           spotifyUri: item.uri,
           dimension: ImageDimension.large,
         ) ,

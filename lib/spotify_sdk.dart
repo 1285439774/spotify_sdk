@@ -57,6 +57,9 @@ class SpotifySdk {
   static const EventChannel _connectionStatusChannel =
       EventChannel(EventChannels.connectionStatus);
 
+  static const EventChannel _rootContentItemsChannel =
+    EventChannel(EventChannels.rootContentItems);
+
   //logging
   static final Logger _logger = Logger(
     //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
@@ -102,16 +105,11 @@ class SpotifySdk {
     }
   }
 
-  static Future<bool> connectToSpotifyRemote2({required String clientId,
-    required String redirectUrl,required String accessToken}) async {
+  static Future<bool> silentConnectToSpotify() async {
     try {
-      return await _channel.invokeMethod(MethodNames.connectToSpotify2,{
-        ParamNames.clientId: clientId,
-        ParamNames.redirectUrl: redirectUrl,
-        ParamNames.accessToken: accessToken,
-      });
+      return await _channel.invokeMethod(MethodNames.silentConnectToSpotify);
     } on Exception catch (e) {
-      _logException(MethodNames.connectToSpotify, e);
+      _logException(MethodNames.silentConnectToSpotify, e);
       rethrow;
     }
   }
@@ -652,11 +650,14 @@ class SpotifySdk {
     }
   }
 
-  static Future<Uint8List?> getImageForContentUri({
+  static Future<Uint8List?> getImageForContentItem({
+    required String spotifyContentItemId,
     required String spotifyUri,ImageDimension dimension = ImageDimension.medium
   })async{
     try {
+      _logger.i("spotifyContentItemId:$spotifyContentItemId,spotifyUri:$spotifyUri");
       return _channel.invokeMethod(MethodNames.getImageForContentItem, {
+        ParamNames.contentItemId: spotifyContentItemId,
         ParamNames.spotifyUri: spotifyUri,
         ParamNames.imageDimension: dimension.value
       });
@@ -729,7 +730,7 @@ class SpotifySdk {
     try{
       var contentItemJson = contentItem.toJson();
       var params = Platform.isAndroid ? {ParamNames.contentItem: jsonEncode(contentItemJson), ParamNames.perpage: perpage, ParamNames.offset: offset} :
-          {ParamNames.spotifyUri:contentItem.uri};
+          {ParamNames.contentItemId:contentItem.id,ParamNames.spotifyUri:contentItem.uri};
       var childrenOfItemJson = await _channel.invokeMethod<String>(
           MethodNames.getChildrenOfItem,
           params);
@@ -749,13 +750,69 @@ class SpotifySdk {
     try{
       var contentItemJson = contentItem.toJson();
       var params = Platform.isAndroid ?{ParamNames.contentItem: jsonEncode(contentItemJson)}:
-          {ParamNames.spotifyUri:contentItem.uri};
+          {ParamNames.contentItemId:contentItem.id,ParamNames.spotifyUri:contentItem.uri};
       return await _channel.invokeMethod<bool>(
           MethodNames.playContentItem,
           params
       );
     }on Exception catch(e){
       _logException(MethodNames.playContentItem, e);
+      rethrow;
+    }
+  }
+
+  static Stream<ListItems> subscribeRootContentItems() {
+    try {
+      var stream = _rootContentItemsChannel.receiveBroadcastStream();
+
+      return stream.map((event) {
+        if (event == null) {
+          throw Exception("⚠️ Received null event from iOS");
+        }
+
+        final Map<String, dynamic> data =
+        Map<String, dynamic>.from(event as Map<Object?, Object?>);
+
+        final type = data['type'];
+        final payload = data['data'];
+        if (type == 'child_list') {
+          _logger.i("📦 Item event: $data");
+        }
+        if (type == 'root_list') {
+          final Map<String, dynamic> listItemsMap =
+          Map<String, dynamic>.from(payload as Map<Object?, Object?>);
+      // ✅ 对 items 列表也做 from() 转换，彻底清理泛型问题
+          final itemsRaw = listItemsMap['items'];
+          if (itemsRaw is List) {
+            listItemsMap['items'] = itemsRaw
+                .map((e) => Map<String, dynamic>.from(e as Map<Object?, Object?>))
+                .toList();
+          }
+         /* _logger.i("💡 📦 Root list received.length: ${listItemsMap['items']?.length ?? 0}");
+          _logger.i("💡 📦 Root list received: $listItemsMap");*/
+
+          return ListItems.fromJson(listItemsMap);
+        }else if(type == "child_list"){
+          final Map<String, dynamic> listItemsMap =
+          Map<String, dynamic>.from(payload as Map<Object?, Object?>);
+          // ✅ 对 items 列表也做 from() 转换，彻底清理泛型问题
+          final itemsRaw = listItemsMap['items'];
+          if (itemsRaw is List) {
+            listItemsMap['items'] = itemsRaw
+                .map((e) => Map<String, dynamic>.from(e as Map<Object?, Object?>))
+                .toList();
+          }
+          /*_logger.i("💡 📦 child list received.length: ${listItemsMap['items']?.length ?? 0}");
+          _logger.i("💡 📦 child list received: $payload");*/
+          //
+
+          return ListItems.fromJson(listItemsMap)..parent =data["parent"];
+        }
+
+        return ListItems.empty();
+      });
+    } on Exception catch (e) {
+      _logException(MethodNames.subscribeRootContentItems, e);
       rethrow;
     }
   }

@@ -29,9 +29,14 @@ class ListItems {
   @JsonKey(name: 'items')
   final List<ListItem> items;
 
+  String? parent;
+
 
   factory ListItems.fromJson(Map<String, dynamic> json) =>
       _$ListItemsFromJson(json);
 
   Map<String, dynamic> toJson() => _$ListItemsToJson(this);
+
+  factory ListItems.empty() => ListItems(limit: 0, offset: 0, total: 0, items: []);
+
 }
